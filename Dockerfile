@@ -20,13 +20,17 @@ RUN set -xe && \
 
 ENV LANG=en_US.UTF-8
 
-
+# -----------------------------------------------------------------------------
+# GCC(15.2)
+# -----------------------------------------------------------------------------
 COPY --from=gcc-source /usr/local /usr/local
 RUN ldconfig && \
   ln -s /usr/local/bin/gcc /usr/local/bin/gcc-15 && \
   ln -s /usr/local/bin/g++ /usr/local/bin/g++-15
 
-
+# -----------------------------------------------------------------------------
+# Python(3.14)
+# -----------------------------------------------------------------------------
 COPY --from=python-source /usr/local /usr/local
 RUN ldconfig
 
@@ -60,11 +64,11 @@ RUN set -xe && \
     curl -fSsL "https://download.oracle.com/java/$VERSION/latest/jdk-${VERSION}_linux-x64_bin.tar.gz" -o /tmp/jdk.tar.gz && \
     mkdir -p /usr/local/openjdk$VERSION && \
     tar -xf /tmp/jdk.tar.gz -C /usr/local/openjdk$VERSION --strip-components=1 && \
-    rm /tmp/jdk.tar.gz && \
+    rm /tmp/jdk.tar.gz; \
   done && \
   ln -sf /usr/local/openjdk$VERSION/bin/javac /usr/local/bin/javac && \
   ln -sf /usr/local/openjdk$VERSION/bin/java /usr/local/bin/java && \
-  ln -sf /usr/local/openjdk$VERSION/bin/jar /usr/local/bin/jar;
+  ln -sf /usr/local/openjdk$VERSION/bin/jar /usr/local/bin/jar
 
 # -----------------------------------------------------------------------------
 # Kotlin
@@ -78,7 +82,7 @@ RUN set -xe && \
       mv /usr/local/kotlinc /usr/local/kotlin-$VERSION && \
       rm /tmp/kotlin.zip; \
     done && \
-    ln -sf /usr/local/kotlin-2.3.0/bin/kotlinc /usr/local/bin/kotlinc
+    ln -sf /usr/local/kotlin-$VERSION/bin/kotlinc /usr/local/bin/kotlinc
 
 # -----------------------------------------------------------------------------
 # Isolate
