@@ -2,11 +2,10 @@
 FROM gcc:15.2-bookworm AS gcc-source
 FROM python:3.14.2-slim-bookworm AS python-source
 
-
 FROM buildpack-deps:bookworm-curl
 
 LABEL maintainer="Yozuru"
-LABEL description="Judge0 Compilers (Dec 2025) - GCC 15, Java 25, Py 3.14, Bash 5.3, Kotlin 2.3"
+LABEL description="Judge0 Compilers (Dec 2025)"
 
 RUN set -xe && \
   apt-get update && \
@@ -31,51 +30,59 @@ RUN ldconfig && \
 COPY --from=python-source /usr/local /usr/local
 RUN ldconfig
 
-
+# -----------------------------------------------------------------------------
+# Bash
+# -----------------------------------------------------------------------------
 ENV BASH_VERSIONS="5.3" 
 
 RUN set -xe && \
   for VERSION in $BASH_VERSIONS; do \
-  echo ">>> Building Bash $VERSION ..." && \
-  curl -fSsL "https://ftpmirror.gnu.org/bash/bash-$VERSION.tar.gz" -o /tmp/bash.tar.gz && \
-  mkdir -p /tmp/bash-build && \
-  tar -xf /tmp/bash.tar.gz -C /tmp/bash-build --strip-components=1 && \
-  cd /tmp/bash-build && \
-  ./configure --prefix=/usr/local/bash-$VERSION --without-bash-malloc && \
-  make -j$(nproc) && \
-  make install && \
-  ln -s /usr/local/bash-$VERSION/bin/bash /usr/local/bin/bash-$VERSION && \
-  cd / && rm -rf /tmp/*; \
+    echo ">>> Building Bash $VERSION ..." && \
+    curl -fSsL "https://ftpmirror.gnu.org/bash/bash-$VERSION.tar.gz" -o /tmp/bash.tar.gz && \
+    mkdir -p /tmp/bash-build && \
+    tar -xf /tmp/bash.tar.gz -C /tmp/bash-build --strip-components=1 && \
+    cd /tmp/bash-build && \
+    ./configure --prefix=/usr/local/bash-$VERSION --without-bash-malloc && \
+    make -j$(nproc) && \
+    make install && \
+    ln -s /usr/local/bash-$VERSION/bin/bash /usr/local/bin/bash-$VERSION && \
+    cd / && rm -rf /tmp/*; \
   done
 
 # -----------------------------------------------------------------------------
-# Java (OpenJDK 25)
+# Java
 # -----------------------------------------------------------------------------
-ENV JAVA_VERSIONS="25"
+ENV JAVA_VERSIONS="21 25"
 
 RUN set -xe && \
   for VERSION in $JAVA_VERSIONS; do \
-  echo ">>> Installing Java $VERSION ..." && \
-  curl -fSsL "https://download.oracle.com/java/$VERSION/latest/jdk-${VERSION}_linux-x64_bin.tar.gz" -o /tmp/jdk.tar.gz && \
-  mkdir -p /usr/local/openjdk$VERSION && \
-  tar -xf /tmp/jdk.tar.gz -C /usr/local/openjdk$VERSION --strip-components=1 && \
-  rm /tmp/jdk.tar.gz && \
+    echo ">>> Installing Java $VERSION ..." && \
+    curl -fSsL "https://download.oracle.com/java/$VERSION/latest/jdk-${VERSION}_linux-x64_bin.tar.gz" -o /tmp/jdk.tar.gz && \
+    mkdir -p /usr/local/openjdk$VERSION && \
+    tar -xf /tmp/jdk.tar.gz -C /usr/local/openjdk$VERSION --strip-components=1 && \
+    rm /tmp/jdk.tar.gz && \
+  done && \
   ln -sf /usr/local/openjdk$VERSION/bin/javac /usr/local/bin/javac && \
   ln -sf /usr/local/openjdk$VERSION/bin/java /usr/local/bin/java && \
-  ln -sf /usr/local/openjdk$VERSION/bin/jar /usr/local/bin/jar; \
-  done
+  ln -sf /usr/local/openjdk$VERSION/bin/jar /usr/local/bin/jar;
 
 # -----------------------------------------------------------------------------
 # Kotlin
 # -----------------------------------------------------------------------------
-ENV KOTLIN_VERSION=2.3.0
+ENV KOTLIN_VERSIONS="1.9.0 2.3.0"
 RUN set -xe && \
-  curl -fSsL "https://github.com/JetBrains/kotlin/releases/download/v$KOTLIN_VERSION/kotlin-compiler-$KOTLIN_VERSION.zip" -o /tmp/kotlin.zip && \
-  unzip -d /usr/local/ /tmp/kotlin.zip && \
-  mv /usr/local/kotlinc /usr/local/kotlin-$KOTLIN_VERSION && \
-  rm /tmp/kotlin.zip && \
-  ln -s /usr/local/kotlin-$KOTLIN_VERSION/bin/kotlinc /usr/local/bin/kotlinc
+    for VERSION in $KOTLIN_VERSIONS; do \
+      echo ">>> Installing Kotlin $VERSION ..." && \
+      curl -fSsL "https://github.com/JetBrains/kotlin/releases/download/v$VERSION/kotlin-compiler-$VERSION.zip" -o /tmp/kotlin.zip && \
+      unzip -q -d /usr/local/ /tmp/kotlin.zip && \
+      mv /usr/local/kotlinc /usr/local/kotlin-$VERSION && \
+      rm /tmp/kotlin.zip; \
+    done && \
+    ln -sf /usr/local/kotlin-2.3.0/bin/kotlinc /usr/local/bin/kotlinc
 
+# -----------------------------------------------------------------------------
+# Isolate
+# -----------------------------------------------------------------------------
 RUN set -xe && \
   git clone https://github.com/judge0/isolate.git /tmp/isolate && \
   cd /tmp/isolate && \
@@ -84,8 +91,9 @@ RUN set -xe && \
   rm -rf /tmp/*
 ENV BOX_ROOT=/var/local/lib/isolate
 
-RUN echo "Build Complete!" && \
-  gcc --version | head -n 1 && \
-  python3 --version && \
-  bash-5.3 --version | head -n 1 && \
-  java -version
+RUN echo "=== Build Verification ===" && \
+    gcc --version | head -n 1 && \
+    python3 --version && \
+    bash-5.3 --version | head -n 1 && \
+    java -version && \
+    kotlinc -version
