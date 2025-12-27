@@ -39,7 +39,7 @@ jobs:
           tags: |
             type=raw,value=${{ inputs.custom_tag }},enable=${{ github.event_name == 'workflow_dispatch' }}
             type=ref,event=tag
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/latest' && github.event_name == 'push' }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' && github.event_name == 'push' }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
