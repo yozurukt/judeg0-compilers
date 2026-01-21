@@ -17,6 +17,8 @@ SKIP_LANG_FILE=".skip"
 def parse_lang_properties(lang_properties):
     variables = {"ARGS": "%s"}
     for line in lang_properties.split("\n"):
+        if not line.strip() or "=" not in line:
+            continue
         key, value = line.split("=", maxsplit=1)
         variables[key] = value[1:-1]
 
