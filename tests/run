@@ -127,7 +127,7 @@ for directory in *; do
             set -e
         else
             bash -c "$COMPILE_CMD"
-            echo "world" | bash -c "$RUN_CMD"
+            echo "Yozuru" | bash -c "$RUN_CMD"
             rm $(ls . | grep -v \.${SOURCE_FILE##*.} | grep -v $LANG_PROPERTIES_FILE | grep -v $SQLITE_DB) &> /dev/null || true
         fi
 

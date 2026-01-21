@@ -1,2 +1,2 @@
 read name
-echo hello, $name
+echo Hello, $name

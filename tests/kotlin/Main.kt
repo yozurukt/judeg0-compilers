@@ -1,4 +1,6 @@
 fun main() {
     val name = readLine()
-    println("hello, $name")
+    // Scanner requires java.util.* (auto-imported)
+    Scanner(System.`in`)
+    println("Hello, $name")
 }
